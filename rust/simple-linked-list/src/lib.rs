@@ -1,8 +1,14 @@
 use std::iter::FromIterator;
 
+/// In the Box formulation of the linked list, each node owns its successor if there is one.
+/// Since Box does not allow cloning the way Rc does, we need some way to work with node "pointers"
+/// without taking ownership of them.  We'll do this by taking advantage of Option<T>'s `as_ref()`
+/// and `as_mut()` methods, which return an `Option<&T>` and an `Option<&mut T>`,
+/// respectively.  We also use the `take()` method to transfer ownership of objects in and out of
+/// `Option`s.
+
 pub struct SimpleLinkedList<T> {
     head: Link<T>,
-    length: usize,
 }
 
 struct Node<T> {
@@ -10,25 +16,33 @@ struct Node<T> {
     next: Link<T>,
 }
 
+impl <T> Node<T> {
+   pub fn new(data: T) -> Self {
+        Self { data, next: None }
+    }
+}
+
+
 type Link<T> = Option<Box<Node<T>>>;
 
 impl<T> SimpleLinkedList<T> {
     pub fn new() -> Self {
-        Self { head: None, length: 0 }
+        Self { head: None }
     }
 
     pub fn len(&self) -> usize {
-        self.length
+        let mut count = 0;
+        let mut cur_node : Option<&Box<Node<T>>> = self.head.as_ref();
+        while let Some(node_ref) = cur_node {
+            count += 1;
+            cur_node = node_ref.next.as_ref();
+        }
+        count
     }
 
     pub fn push(&mut self, element: T) {
-        let new_node = Box::new(Node {
-            data: element,
-            next: None,
-        });
-
+        let new_node : Box<Node<T>> = Box::new(Node::new(element));
         self.push_node(new_node);
-        self.length += 1;
     }
 
     fn push_node(&mut self, mut node: Box<Node<T>>){
@@ -38,7 +52,6 @@ impl<T> SimpleLinkedList<T> {
 
     pub fn pop(&mut self) -> Option<T> {
         self.pop_node().map(|node|{
-            self.length -= 1;
             node.data
         })
     }
@@ -69,7 +82,7 @@ impl<T> SimpleLinkedList<T> {
     pub fn rev(self) -> SimpleLinkedList<T> {
         let mut result = SimpleLinkedList::new();
 
-        let mut cur_node = self.head;
+        let mut cur_node : Option<Box<Node<T>>> = self.head;
         while let Some(mut node) = cur_node {
             result.push(node.data);
             cur_node = node.next.take();
@@ -80,10 +93,10 @@ impl<T> SimpleLinkedList<T> {
 }
 
 impl<T> FromIterator<T> for SimpleLinkedList<T> {
-    fn from_iter<I: IntoIterator<Item = T>>(_iter: I) -> Self {
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
         let mut result = SimpleLinkedList::new();
         
-        for i in _iter {
+        for i in iter {
             result.push(i);
         }
 
@@ -106,19 +119,13 @@ impl<T> Into<Vec<T>> for SimpleLinkedList<T> {
     fn into(self) -> Vec<T> {
         let mut result = Vec::new();
 
-        let mut cur_node = self.head;
+        let mut cur_node : Option<Box<Node<T>>> = self.head;
 
         while let Some(mut node) = cur_node {
             result.insert(0usize, node.data);
             cur_node = node.next.take();
         }
-        result
 
-        // let mut result = Vec::new();
-        // while let Some(data) = self.pop() {
-        //     result.push(data);
-        // }
-        // result.reverse();
-        // result
+        result
     }
 }
