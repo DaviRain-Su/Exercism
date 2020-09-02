@@ -70,6 +70,12 @@ impl<T> SimpleLinkedList<T> {
         })
     }
 
+    pub fn peek_mut(&mut self) -> Option<&mut T> {
+        self.head.as_mut().map(|node | {
+            &mut node.data
+        })
+    }
+
     /// push 1 [1]
     /// push 2 [1, 2]
     /// push 3 [1, 2, 3] ---------> Stack (1, 2, 3)
@@ -91,6 +97,7 @@ impl<T> SimpleLinkedList<T> {
         result
     }
 }
+
 
 impl<T> FromIterator<T> for SimpleLinkedList<T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
@@ -127,5 +134,66 @@ impl<T> Into<Vec<T>> for SimpleLinkedList<T> {
         }
 
         result
+    }
+}
+
+pub struct IntoIter<T>(SimpleLinkedList<T>);
+
+impl <T> SimpleLinkedList<T> {
+    pub fn into_iter(self) -> IntoIter<T> {
+        IntoIter(self)
+    }
+}
+
+impl <T> Iterator for IntoIter<T> {
+    type Item = T;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.pop()
+    }
+}
+
+pub struct Iter<'a, T>{
+    next: Option<&'a Node<T>>
+}
+
+impl <T> SimpleLinkedList<T> {
+    pub fn iter(&self) -> Iter<'_,T> {
+        Iter{ next: self.head.as_ref().map(|node|{
+            & **node
+        })}
+    }
+}
+
+impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = &'a T;
+    fn next(&mut self) -> Option<Self::Item>{
+        self.next.map(|node|{
+            self.next = node.next.as_ref().map(|node| & **node);
+            &node.data
+        })
+    }
+}
+
+pub struct IterMut<'a, T>{
+    next: Option<&'a mut Node<T>>
+}
+
+impl <T> SimpleLinkedList<T> {
+    pub fn iter_mut(&mut self) -> IterMut<'_, T> {
+        IterMut{
+            next: self.head.as_mut().map(|node|{
+                &mut **node
+            })
+        }
+    }  
+}
+
+impl <'a, T> Iterator for IterMut<'a, T> {
+    type Item = &'a mut T;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.next.take().map(|node|{
+            self.next = node.next.as_mut().map(|node| { &mut **node});
+            &mut node.data
+        })
     }
 }

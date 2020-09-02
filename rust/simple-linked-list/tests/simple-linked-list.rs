@@ -92,3 +92,69 @@ fn test_into_vector() {
     let s_as_vec: Vec<i32> = s.into();
     assert_eq!(v, s_as_vec);
 }
+
+
+
+#[test]
+fn peek() {
+    let mut list = SimpleLinkedList::new();
+    assert_eq!(list.peek(), None);
+    assert_eq!(list.peek_mut(), None);
+
+    list.push(1);
+    list.push(2);
+    list.push(3);
+
+    list.peek_mut().map(|value|{
+        *value = 42;
+    });
+
+    assert_eq!(list.peek_mut(), Some(&mut 42));
+    assert_eq!(list.peek(), Some(& 42));
+}
+
+#[test]
+fn into_iter() {
+    let mut list = SimpleLinkedList::new();
+    list.push(1);
+    list.push(2);
+    list.push(3);
+
+
+    let mut iter = list.into_iter();
+    assert_eq!(iter.next(), Some(3));
+    assert_eq!(iter.next(), Some(2));
+    assert_eq!(iter.next(), Some(1));
+
+    assert_eq!(iter.next(), None);
+}
+
+#[test]
+fn iter() {
+    let mut list = SimpleLinkedList::new();
+    list.push(1);
+    list.push(2);
+    list.push(3);
+
+
+    let mut iter = list.iter();
+
+    assert_eq!(iter.next(), Some(&3));
+    assert_eq!(iter.next(), Some(&2));
+    assert_eq!(iter.next(), Some(&1));
+    assert_eq!(iter.next(), None);
+}
+#[test]
+fn iter_mut() {
+    let mut list = SimpleLinkedList::new();
+    list.push(1);
+    list.push(2);
+    list.push(3);
+
+    let mut iter = list.iter_mut();
+    assert_eq!(iter.next(), Some(&mut 3));
+    assert_eq!(iter.next(), Some(&mut 2));
+    assert_eq!(iter.next(), Some(&mut 1));
+    assert_eq!(iter.next(), None);
+}
+
