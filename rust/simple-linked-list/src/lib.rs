@@ -98,6 +98,15 @@ impl<T> SimpleLinkedList<T> {
     }
 }
 
+impl <T> Drop for SimpleLinkedList<T> {
+    fn drop(&mut self) {
+        let mut cur_node = self.head.take();
+        while let Some(mut node) = cur_node {
+            cur_node = node.next.take();
+        }
+    }
+}
+
 
 impl<T> FromIterator<T> for SimpleLinkedList<T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
